@@ -1,15 +1,14 @@
 import { Display, Button } from "@App/components";
-import catsApi, { CatImage } from "@App/lib/catsApi";
-import { FC, useEffect, useState, memo, useCallback } from "react";
-
-const CatDisplay: FC<{ cat: CatImage; deleteACat: (id: string) => void }> = ({
-  cat,
-  deleteACat,
-}) => {
+import catsApi, { CatImage, CatImageWithName } from "@App/lib/catsApi";
+import { FC, useEffect, useState, memo, useCallback, useMemo } from "react";
+import { unstable_batchedUpdates } from "react-dom";
+const CatDisplay: FC<{
+  cat: CatImageWithName;
+  deleteACat: (id: string) => void;
+}> = ({ cat, deleteACat }) => {
   useEffect(() => {
-    console.log("render");
+    console.log("Render");
   });
-
   return (
     <div className="flex flex-col">
       <img
@@ -17,6 +16,7 @@ const CatDisplay: FC<{ cat: CatImage; deleteACat: (id: string) => void }> = ({
         className="overflow-hidden  max-w-[350px] object-contain"
         alt=""
       />
+      <h2 className="text-center py-2  text-white font-medium">{cat.name}</h2>
       <Button onClick={() => deleteACat(cat.id)}>Delete</Button>
     </div>
   );
@@ -24,17 +24,36 @@ const CatDisplay: FC<{ cat: CatImage; deleteACat: (id: string) => void }> = ({
 
 const CatDisplayMemoized = memo(CatDisplay);
 
-const ListCats: FC<{ limit: number }> = ({ limit }) => {
+const transformCats = (cats: CatImage[]): CatImageWithName[] => {
+  console.log("transform");
+  return cats.map((cat, idx) => {
+    return {
+      ...cat,
+      name: `cat #${idx} `,
+    };
+  }) as CatImageWithName[];
+};
+
+const ListCats: FC<{ limit: number; loadMore: () => void }> = ({
+  limit,
+  loadMore,
+}) => {
   const [data, setData] = useState<CatImage[]>([]);
+
+  const newCats = useMemo(() => transformCats(data), [data]);
+
+  useEffect(() => {
+    console.log("list render");
+  });
 
   useEffect(() => {
     (async () => {
-      const cats = await catsApi.list({ limit });
+      const cats = await catsApi.list({ limit }, true);
       setData(cats);
     })();
-  }, []);
+  }, [limit]);
 
-  const deleteACat = useCallback((id: string) => {
+  const deleteCat = useCallback((id: string) => {
     const newCats = catsApi.deleteACat(id);
     setData(newCats);
   }, []);
@@ -46,29 +65,41 @@ const ListCats: FC<{ limit: number }> = ({ limit }) => {
       </div>
     );
   }
+
   return (
-    <div className="w-full h-[80vh] flex-wrap overflow-y-scroll flex gap-3 my-6 flex-row justify-center">
-      {data.map((cat) => (
-        <CatDisplayMemoized deleteACat={deleteACat} key={cat.id} cat={cat} />
-      ))}
-    </div>
+    <>
+      <span className="text-white px-5">cats : {data.length}</span>
+      <Button onClick={loadMore}>load more</Button>
+      <div className="w-full h-[80vh] flex-wrap overflow-y-scroll flex gap-3 my-6 flex-row justify-center">
+        {newCats.map((cat) => (
+          <CatDisplayMemoized deleteACat={deleteCat} key={cat.id} cat={cat} />
+        ))}
+      </div>
+    </>
   );
 };
 
+const ListMemoized = memo(ListCats);
+
 function App() {
   const [count, setCount] = useState(0);
+  const [limit, setLimit] = useState(10);
+
+  const loadMore = useCallback(() => {
+    console.log("load more");
+    setLimit((limit) => limit + 10);
+  }, []);
+
   return (
     <>
       <Button
         onClick={() => {
-          console.log("click");
           setCount(count + 1);
         }}
       >
         Click me {count}
       </Button>
-      <ListCats limit={10} />
-      {/* <h3 className="text-white font-medium text-center">List 2</h3> */}
+      <ListMemoized loadMore={loadMore} limit={limit} />
     </>
   );
 }

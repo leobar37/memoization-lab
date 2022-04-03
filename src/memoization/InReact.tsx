@@ -20,6 +20,7 @@ const App: FC<AppProps> = ({}) => {
   const [resultFactorial, setFactorial] = useState<number>(0);
   // const resultFactorial = useMemo(() => factorial(num), [num]);
   const [update, forceUpdate] = useForceUpdate();
+
   useEffect(() => {
     console.log("update");
     const result = factorial(num as number);

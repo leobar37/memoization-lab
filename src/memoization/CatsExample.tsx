@@ -1,10 +1,10 @@
-import { Display, Button } from "@App/components";
+import { Button } from "@App/components";
 import catsApi, { CatImage } from "@App/lib/catsApi";
 import { FC, useEffect, useState, memo } from "react";
 
 const CatDisplay: FC<{ cat: CatImage }> = ({ cat }) => {
   useEffect(() => {
-    console.log("render");
+    console.log("Render");
   });
 
   return (
@@ -19,33 +19,25 @@ const CatDisplay: FC<{ cat: CatImage }> = ({ cat }) => {
 };
 
 const ListCats: FC<{ limit: number }> = ({ limit }) => {
-  const [data, setData] = useState<CatImage[]>([]);
+  const [cats, setCats] = useState<CatImage[]>([]);
 
   useEffect(() => {
     (async () => {
-      const cats = await catsApi.list({ limit }, true);
-      setData(cats);
+      const catsData = await catsApi.list();
+      setCats(catsData);
     })();
-  }, [limit]);
-
-  if (!data || data.length === 0) {
-    return (
-      <div>
-        <h2 className="text-white text-lg">Loading Cats</h2>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div className="w-full h-[80vh] flex-wrap overflow-y-scroll flex gap-3 my-6 flex-row justify-center">
-      {data.map((cat) => (
-        <CatDisplay key={cat.id} cat={cat} />
+      {cats.map((cat) => (
+        <CatDisplay cat={cat} key={cat.id} />
       ))}
     </div>
   );
 };
 
-const ListCatMemoized = memo(ListCats);
+const ListCatsMemoized = memo(ListCats);
 
 function App() {
   const [count, setCount] = useState(0);
@@ -59,13 +51,11 @@ function App() {
       >
         Click me {count}
       </Button>
-      <ListCats limit={10} />
+
       <h3 className="text-white font-medium text-center">List 2</h3>
-      <ListCatMemoized limit={10 + count} />
+      <ListCatsMemoized limit={10} />
     </>
   );
 }
 
-const MemoizedApp = memo(App);
-
-export default MemoizedApp;
+export default App;

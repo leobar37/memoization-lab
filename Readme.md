@@ -102,9 +102,3 @@ a un componente. El cual le puede indicar a react que se salte el renderizado. y
   valores de entrada y salidas deben ser retenidos.
 
 - Esta técnica solo funciona con funciones puras si su función alcanza variables globales o otros estados.No debería memoizarse.
-
-## References
-
-- https://dmitripavlutin.com/use-react-memo-wisely/
-- https://dmitripavlutin.com/react-usememo-hook/
-- https://everyday.codes/javascript/react-usememo-and-when-you-should-use-it/
